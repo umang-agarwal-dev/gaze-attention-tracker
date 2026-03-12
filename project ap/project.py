@@ -53,13 +53,31 @@ while True:
     left_eye_right_corner_x=int(landmarks[133].x*frame_w)
     left_eye_right_corner_y=int(landmarks[133].y*frame_h)
 
-    #gaze ratio
+    #top and down
+    #left eye upper and lower
+    left_eye_top=landmarks[159]
+    left_eye_bottom=landmarks[145]
+
+    #left eye top bottom coord
+    left_eye_top_y=int(left_eye_top.y*frame_h)
+    left_eye_bottom_y=int(left_eye_bottom.y*frame_h)
+
+    #gaze ratio for left right
     left_ratio = (left_eye_left_corner_x - iris_center_left_x)/(left_eye_left_corner_x-left_eye_right_corner_x)
 
+    #gaze ratio for top bottom
+    eye_corner_y = (left_eye_left_corner_y + left_eye_right_corner_y) / 2
+    eye_width = abs(left_eye_right_corner_x - left_eye_left_corner_x)
+    vertical_ratio = (iris_center_left_y - eye_corner_y) / eye_width
+
     #result
-    if left_ratio<0.38:
-     gaze="Looking Left"
-    elif left_ratio>0.55:
+    if vertical_ratio<-0.1:
+     gaze="Looking Top"
+    elif vertical_ratio>0.023:
+      gaze="Looking Down"
+    elif left_ratio<0.38:
+      gaze="Looking Left"
+    elif left_ratio>0.55 :
       gaze="Looking Right"
     else :
       gaze="Center"
@@ -79,14 +97,13 @@ while True:
     cv.putText(frame, f"Center Time:{center_time:.2f}s", (frame_w-250, frame_h-20), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1)
     cv.putText(frame, f"Max Focus:{highest_center_time:.2f}s", (frame_w-250, frame_h-50), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,0), 1)
 
-
     # warning logic
     if gaze != "Center":
         if prev_gaze == "Center":
             lookaway_start_time = time.time()
             warning_active = False
 
-        if time.time() - lookaway_start_time > 0.5:
+        if time.time() - lookaway_start_time > 0.3:
             cv.putText(frame, "Look At The Screen!", (100,100), cv.FONT_HERSHEY_COMPLEX, 1.2, (0,0,255), 3)
 
             if not warning_active:
